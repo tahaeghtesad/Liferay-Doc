@@ -1,0 +1,117 @@
+\section{Liferay Service Builder}
+You can use the service builder to generate classes whom have the responsibility of accessing database, and performing CRUD and other db queries on the database. Be aware that Liferay 7 has been built using Hibernate ORM which means you can and will use JPA, HQL and etc.
+
+A generic modular application of Liferay includes three base modules of \textbf{*web}, \textbf{*api}, and \textbf{*service}.
+
+Before continuing, please read the following articles from Liferay Developer's Network. And get familiar with these modules.
+\begin{enumerate}
+    \item \url{https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/fundamentals}
+    \item \url{https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/modularizing-an-existing-portlet}
+    \item \url{https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/defining-an-object-relational-map-with-service-builder}
+\end{enumerate}
+
+Then begin changing your first portlet according to [2].
+
+Again you can use the blade templates to create a service builder. Service Builder is \textbf{another code generation tool}. On running it will create your \textit{Model} classes, \textit{Repository} classes and \textit{Service} classes.
+\subsection{Service Builder Template}
+Create a service builder module using the blade-cli. The folder structure will be like this:
+
+\lstset{language=bash}
+\begin{lstlisting}
+blade create -t service-builder -p ir.hamisystem.liferay awesome-module
+\end{lstlisting}
+
+\lstset{language=bash}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=Folder Structure]
+.
+└── awesome-module
+    ├── awesome-module-api
+    │   ├── bnd.bnd
+    │   └── build.gradle
+    ├── awesome-module-service
+    │   ├── bnd.bnd
+    │   ├── build.gradle
+    │   └── service.xml
+    └── build.gradle
+\end{lstlisting}
+\end{minipage}
+
+It is good to create \textit{awesome-module-web} module and add your existing portlet.
+
+In \textit{service.xml} you can define your model. Then running the following gradle task, the Service Builder will create your corresponding classes.
+
+\lstset{language=bash}
+\begin{lstlisting}
+gradle buildService
+\end{lstlisting}
+
+If you want to clearly understand what these classes do, go here: \href{https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/running-service-builder-and-understanding-the-generated-code}{here}
+
+Upon deployment of these modules, Liferay will run the generated SQL scripts and create related tables in the database. If you anytime want to clear these tables you can run this task:
+
+\lstset{language=bash}
+\begin{lstlisting}
+gradle cleanServiceBuilder
+\end{lstlisting}
+
+\textit{\textbf{CAVEAT!!!}} This will also delete all your data in the tables.
+\subsection{Samples}
+I have created a \textit{Survey} entity.
+
+\lstset{language=xml}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=service.xml]
+<?xml version="1.0"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.0.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_0_0.dtd">
+
+<service-builder package-path="ir.hamisystem.liferay">
+	<namespace>Hami</namespace>
+	<entity local-service="true" name="Survey" remote-service="true" uuid="true">
+		<column name="surveyId" primary="true" type="long" />
+		<column name="title" type="String" />
+		<column name="subtitle" type="String" />
+		<reference entity="AssetEntry" package-path="com.liferay.portlet.asset" />
+		<reference entity="AssetTag" package-path="com.liferay.portlet.asset" />
+	</entity>
+</service-builder>
+\end{lstlisting}
+\end{minipage}
+
+For performing CRUD operations, especially find and insert, use these samples:
+
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=Find]
+surveyLocalService.getSurveies(-1,-1)
+\end{lstlisting}
+\end{minipage}
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=Insert]
+        long id = counterLocalService.increment();
+        Survey survey = surveyLocalService.createSurvey(id);
+        survey.setTitle("title");
+        survey.setSubtitle("subtitle");
+        surveyLocalService.addSurvey(survey);
+\end{lstlisting}
+\end{minipage}
+
+\textit{surveyLocalService} can be injected as an OSGI module or can be referenced using the \textit{SurveyLocalServiceUtil} static class. I don't know what is the expected action of these two, but it looks like they perform the same.
+Inject \textit{counterLocalService} the same way.
+
+If you want to inject this module, use the \textit{@Reference} annotation of OSGI:
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}
+    private SurveyLocalService surveyLocalService;
+
+    @Reference(bind = "-")
+    public void setSurveyLocalService(SurveyLocalService surveyLocalService) {
+        this.surveyLocalService = surveyLocalService;
+    }
+\end{lstlisting}
+\end{minipage}

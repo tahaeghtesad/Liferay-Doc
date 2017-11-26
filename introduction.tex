@@ -1,0 +1,59 @@
+\section{Introduction to Liferay 7 Development}
+
+Liferay Portal is a free and open source enterprise portal software product. Distributed under the GNU Lesser General Public License and optional commercial license, Liferay was declared "Best Open Source Portal" by InfoWorld in 2007.
+
+Written in Java on top of Spring Framework, Liferay Portal is a web platform with features commonly required for the development of websites and portals. Liferay includes a built-in web content management system allowing users to build websites and portals as an assembly of themes, pages, portlets/gadgets and a common navigation. Liferay is sometimes described as a content management framework or a web application framework. Liferay's support for plugins extends into multiple programming languages, including support for PHP and Ruby portlets.
+
+% \subsection{Begin Development}
+\subsection{Blade CommandLine Tools}
+First, install \href{https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/installing-blade-cli}{blade-cli} which you can use to initialize your workspace. Then, by running
+
+\begin{lstlisting}
+blade init <workspaceName>
+\end{lstlisting}
+
+you can create a workspace.
+
+\subsection{Initializing Database}
+\textit{If you like to use the bundled in-file database storage ie hypersonic, please skip this step.}
+
+Install MySQL instance or MariaDB according to your operating system and/or distro. Create a database using the following command:
+
+\lstset{language=sql}
+\begin{lstlisting}
+CREATE DATABASE lportal CHARACTER SET utf8 COLLATE utf8_general_ci;
+\end{lstlisting}
+
+This command will automatically download the latest version of Liferay with Tomcat bundle and extract it to the \textit{budles} folder.
+Then you need to start the bundled Tomcat server and Liferay with this command:
+
+\lstset{language=bash}
+\begin{lstlisting}
+blade start server -b
+\end{lstlisting}
+
+\textit{-b} parameter causes this instance to launch in the background.
+
+\textbf{\textit{Be patient! Running Liferay can take up to 10 minutes!}}
+
+After the end of deploy procedure, the blade will automatically launch a web browser for you. Be sure that the tcp:8080 port is available in your system.
+
+\subsection{Configuring Liferay Database and User}
+
+When running Liferay for the first time, you need to configure some stuff, but I would suggest not to change them as you can change them later in the configuration panel. Except for the database configuration! Also, if you are using the bundled hypersonic (HSQL) simply click finish and restart the Liferay server.
+
+If you are intending to use MySQL as your production database, simply click on the \textit{change} button, then select the appropriate JDBC driver and change connection URL. Providing login credentials are also a necessity.
+
+Click on the finish button and restart the server. If you have started the server by \textit{-b} parameter, you can run:
+
+\begin{lstlisting}
+blade server stop
+\end{lstlisting}
+
+Otherwise, just hit Ctrl+c and run the start command once again. As you can see on the page, a "\textit{.properties}" file has been added to your bundle's root folder. It contains the configuration which you stated earlier on the previous page.
+
+\subsection{First Run}
+
+When you have successfully restarted your Liferay server, you should see the very first page of Liferay. As you can see it is so much alike to other CMSs like Wordpress. For getting more familiar with the this useful and popular CMF's UI, click on sign in. Then enter \textit{test@liferay.com} and \textit{test} as username and password respectively and hit enter.
+
+In here you can make a post, change the UI using the available apps and etc. Take some time and feel your self at home. \textit{\textbf{(I'm sure you can't!)}}

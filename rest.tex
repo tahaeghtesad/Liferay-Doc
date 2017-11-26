@@ -1,0 +1,84 @@
+\section{RESTful Services in Liferay}
+
+Liferay can provide web services using multiple frameworks like \href{https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html}{Spring-MVC}, \href{https://en.wikipedia.org/wiki/Apache_CXF}{Apache CXF} and etc. While the default one is Apache CXF. Apache CXF can be extended using \href{https://en.wikipedia.org/wiki/Java_API_for_RESTful_Web_Services}{JAX-RS} and \href{https://en.wikipedia.org/wiki/Java_API_for_XML_Web_Services}{JAX-WS}.
+
+\subsection{JAX-RS}
+Original Tutorial: \url{https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/jax-ws-and-jax-rs}
+
+Providing RESTful web services are as easy as a popsicle in Liferay using J2EE. You create your service class by extending \textit{javax.ws.rs.core.Application}. Provide an application path by \textbf{@ApplicationPath} annotation. Override \textit{getSingletons()} and provide \textit{this} instance as an application component. And deploy it with OSGI \textbf{@Component} annotation.
+
+Serialization to JSON objects can be done via Jackson. A wrapper called \textit{com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider} is available for Jackson to provide serialization and deserialization to JAX-RS. It can be found in the following repository:
+
+\lstset{language=groovy}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}
+compileInclude group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: '2.9.2'
+\end{lstlisting}
+\end{minipage}
+
+\textbf{It needs to be added as \textit{compileInclude} because liferay doesn't support it internally}. Also, don't forget to add an instance as singleton in \textit{getSingletons()} method.
+
+Ok! Now the whole source code to our \textit{AwesomeRest} can be like this:
+
+\lstset{language=Java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=AwesomeRest.java]
+package ir.hamisystem.liferay;
+
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import ir.hamisystem.liferay.service.SurveyLocalService;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Application;
+import java.util.HashSet;
+import java.util.Set;
+
+@Component(immediate = true, service = Application.class)
+@ApplicationPath("/AwesomeRest")
+public class AwesomeRest extends Application{
+
+    private SurveyLocalService surveyLocalService;
+
+    @Reference(bind = "-")
+    public void setSurveyLocalService(SurveyLocalService surveyLocalService) {
+        this.surveyLocalService = surveyLocalService;
+    }
+
+    @Override
+    public Set<Object> getSingletons() {
+        HashSet<Object> objects = new HashSet<>();
+        objects.add(new JacksonJsonProvider());
+        objects.add(this);
+        return objects;
+    }
+
+    @GET
+    @Path("/hello")
+    @Produces("text/html")
+    public String sayHello() {
+        return "Hello";
+    }
+
+    @GET
+    @Path("/latestSurvey")
+    @Produces("application/json")
+    public Object getLatestSurvey() {
+        return surveyLocalService.getSurveies(-1,-1);
+    }
+
+
+}
+\end{lstlisting}
+\end{minipage}
+
+
+Then using your Liferay Admin panel, navigate to  Configuration → System Settings → Foundation → CXF Endpoints. Click on the + button and provide a \textbf{Context Path}
+
+After that navigate to Configuration → System Settings → Foundation → REST extenders. Click on the + button and expand your CXF endpoint. \textit{(both these endpoints must be the same)}
+
+Ok. Now you can make a call to \url{http://localhost:8080/o/<endpoint_name>/AwesomeRest/hello} or if you navigate to \url{http://localhost:8080/o/<endpoint_name>/} all registered services will be shown.

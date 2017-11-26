@@ -1,0 +1,242 @@
+\section{Liferay Portlets}
+
+Portlets are pluggable user interface software components that are managed and displayed in a web or enterprise portal.
+
+Portlets produce fragments of markup (HTML, XHTML, WML) code that are aggregated into a portal. Typically, following the desktop metaphor, a portal page is displayed as a collection of non-overlapping portlet windows, where each portlet window displays a portlet. Hence a portlet (or collection of portlets) resembles a web-based application that is hosted on a portal.
+
+Some examples of portlet applications are e-mail, weather reports, discussion forums, and news.
+
+Portlet standards are intended to enable software developers to create portlets that can be plugged into any portal supporting the standards.
+
+Portlet-based solutions are an example of component-based software engineering.
+
+\subsection{Creating a new Module}
+
+I'm going to show how you should develop your first portlet. In this article it is supposed that you are already familiar with MVC architecture, JSP pages and gradle build tools.
+
+Creating a module can be done via blade templates. They do quite an easy job of initializing a new project. Let me show how to create them via blade first.
+
+\subsubsection{Blade Templates}
+
+You can create blade templates by running a blade command. First, you need to know what templates are available.
+
+\lstset{language=bash}
+\begin{lstlisting}
+blade create -l
+\end{lstlisting}
+
+Then use the following command to create a template project:
+
+\lstset{language=bash}
+\begin{lstlisting}
+blade create [OPTIONS] <NAME>
+blade create -t mvc-portlet -p ir.hamisystem.liferay awesome-portlet
+\end{lstlisting}
+
+\textit{-t} tells blade what template to use.
+\textit{-p} is the name of the package.
+\textit{awesome-portlet} is the name of the portlet. Consequently, portlet classname will be \textit{Awesome Portlet}
+
+This command will create a folder \textit{awesome-portlet} with the template of an mvc-portlet in the \textit{modules} folder. The structure of this folder is as the same as any other maven or gradle project.
+
+The folder structure is as follows:
+
+\lstset{language=bash}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=Folder Structure]
+.
+└── awesome-portlet
+    ├── bnd.bnd
+    ├── build.gradle
+    └── src
+        └── main
+            └── java
+                └── ir
+                    └── hamisystem
+                        └── liferay
+                            ├── constants
+                            │   └── AwesomePortletKeys.java
+                            └── portlet
+                                └── AwesomePortlet.java
+\end{lstlisting}
+\end{minipage}
+
+\lstset{language=bnd}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=bnd.bnd]
+Bundle-Name: awesome-portlet
+Bundle-SymbolicName: ir.hamisystem.liferay
+Bundle-Version: 1.0.0
+Export-Package: ir.hamisystem.liferay.constants
+\end{lstlisting}
+\end{minipage}
+
+In here, \textit{bnd} will export \textit{ir.hamisystem.liferay.constants} package. It is not runnable, so, it is not required to be marked as an OSGI module.
+
+\lstset{language=groovy}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=build.gradle]
+dependencies {
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "2.0.0"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.util.taglib", version: "2.0.0"
+	compileOnly group: "javax.portlet", name: "portlet-api", version: "2.0"
+	compileOnly group: "javax.servlet", name: "javax.servlet-api", version: "3.0.1"
+	compileOnly group: "jstl", name: "jstl", version: "1.2"
+	compileOnly group: "org.osgi", name: "osgi.cmpn", version: "6.0.0"
+}
+\end{lstlisting}
+\end{minipage}
+
+BND is the main tool used for deploying and binding OSGI bundles. Using OSGI you can deploy your module without redeploying your whole liferay and make your system more modular. Liferay uses OSGI to achieve this modularity and help you deploy your portlets with more ease.
+
+Finally, this is the source code for \textit{AwesomePortlet} class.
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=AwesomePortlet.java]
+package ir.hamisystem.liferay.portlet;
+
+import ir.hamisystem.liferay.constants.AwesomePortletKeys;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import javax.portlet.GenericPortlet;
+import javax.portlet.Portlet;
+import javax.portlet.PortletException;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+
+import org.osgi.service.component.annotations.Component;
+
+/**
+ * @author taha
+ */
+@Component(
+	immediate = true,
+	property = {
+		"com.liferay.portlet.display-category=category.sample",
+		"com.liferay.portlet.instanceable=true",
+		"javax.portlet.display-name=awesome-portlet Portlet",
+		"javax.portlet.name=" + AwesomePortletKeys.Awesome,
+		"javax.portlet.security-role-ref=power-user,user"
+	},
+	service = Portlet.class
+)
+public class AwesomePortlet extends GenericPortlet {
+
+	@Override
+	protected void doView(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		PrintWriter printWriter = renderResponse.getWriter();
+
+		printWriter.print("awesome-portlet Portlet - Hello World!");
+	}
+
+}
+\end{lstlisting}
+\end{minipage}
+
+An explanation is required here. \textit{\textbf{@Component}} is the important annotation. It registers this class (portlet) as an OSGI module, which will be deployed to Liferay. Setting \textit{immediate} to \textit{true} means that this module will be immediately deployed. \textit{service} is the type of this module which is, in this case, a \textit{javax.portlet.Portlet} and at last, \textit{property} are some properties for this class. I think the names are clear what they do.
+
+Shall we deploy it? Run the following command (either in the root folder of your blade workspace that will deploy all of the created modules or in this awesome-portlet's folder which will only deploy this module)
+
+\lstset{language=bash}
+\begin{lstlisting}
+gradlew deploy
+\end{lstlisting}
+
+So, in the admin page of the Liferay, you can add this following portlet from the \textit{Add (Plus button at the top-right)+Applications+Sample+awesome-portlet Portlet}. You can customize this names and categories via \textit{properties} property of @Component annotation.
+As you can see, this portlet shows \textit{"awesome-portlet Portlet - Hello World!"} which is the output of the \textit{doView()} function.
+
+\subsection{Customizing Awesome Portlet}
+Next, we need to configure this page. As it is exhaustive to use the \textit{PrintWriter} we should find another way to doing so, namely the JSP pages. Instead of overriding \textit{doView()} override \textit{render()} function.
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=AwesomePortlet.java]
+public class AwesomePortlet extends MVCPortlet {
+    @Override
+    public void render(RenderRequest renderRequest, RenderResponse renderResponse) throws IOException, PortletException {
+        super.render(renderRequest, renderResponse);
+    }
+}
+\end{lstlisting}
+\end{minipage}
+
+Then create these three following files in the \textit{resources} besides the \textit{src} directory. And add these properties to the \textit{@Component} annotation.
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=AwesomePortlet.java]
+"javax.portlet.init-param.template-path=/",
+"javax.portlet.init-param.view-template=/view.jsp",
+"javax.portlet.resource-bundle=content.Language"
+\end{lstlisting}
+\end{minipage}
+
+\lstset{language=bash}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}
+   └── resources
+       ├── content
+       │   └── Language.properties
+       └── META-INF
+           └── resources
+               ├── init.jsp
+               └── view.jsp
+\end{lstlisting}
+\end{minipage}
+
+\lstset{language=jsp}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=init.jsp]
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
+<%@ taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %> <%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+<%@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>  
+<liferay-theme:defineObjects />
+<portlet:defineObjects />
+\end{lstlisting}
+\end{minipage}
+
+\lstset{language=jsp}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=view.jsp]
+<%@ taglib prefix="liferay-ui" uri="http://liferay.com/tld/ui" %>
+<%@ include file="/init.jsp" %>
+<b><liferay-ui:message key="awesome-portlet.caption"/></b>
+\end{lstlisting}
+\end{minipage}
+
+\lstset{language=properties}
+\begin{lstlisting}[caption=Language.properties]
+awesome-portlet.caption=Hello from awesome-portlet JSP!
+\end{lstlisting}
+
+It is important to include your \textit{init.jsp} in \textit{view.jsp} file. When you deploy the module, the \textit{awesome-portlet.caption} will be shown in the portlet which is \textit{"Hello from awesome-portlet JSP!"}
+
+\subsection{Sending Parameters}
+
+Suppose you want to pass a parameter from the controller ie. \textit{AwesomePortlet}, you can use the \textit{renderRequest.setAttribute()}. For example, If you want to show a string (maybe it came from the database) do this:
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=AwesomePortlet.java]
+public void render(RenderRequest renderRequest, RenderResponse renderResponse) throws IOException, PortletException {
+        String s = "came from db";
+        renderRequest.setAttribute("object", s);
+        super.render(renderRequest, renderResponse);
+    }
+\end{lstlisting}
+\end{minipage}
+
+\lstset{language=jsp}
+\begin{lstlisting}[caption=view.jsp]
+<h6><%=(String)request.getAttribute("object")%></h6>
+\end{lstlisting}
+
+Use the request object in both \textit{portlet} class and \textit{View}

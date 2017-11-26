@@ -1,0 +1,27 @@
+\section{Users and Roles}
+\subsection{User Model}
+
+For accessing current user model who is requesting for the current portlet, there is no need to access the database via Service Builder. There is already a session manager which is responsible for holding current user data.
+
+\lstset{language=java}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=AwesomePortlet.java]
+import com.liferay.portal.kernel.util.PortalUtil;
+//...
+    @Override
+    public void render(RenderRequest renderRequest, RenderResponse renderResponse) throws IOException, PortletException {
+        try {
+            User user = PortalUtil.getUser(renderRequest);
+            renderRequest.setAttribute("user", user);
+        } catch (PortalException e) {
+            // do whatever you want...
+        }
+        super.render(renderRequest, renderResponse);
+    }
+\end{lstlisting}
+\end{minipage}
+
+If the user returned by \textit{getUser()} method is \textit{null} then current request has come from a guest (not logged-in) user.
+
+\subsection{Groups and Roles}
+You can access roles and groups from the provided getter \textit{(user.get...())} methods.
