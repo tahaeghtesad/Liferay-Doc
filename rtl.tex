@@ -1,0 +1,59 @@
+\section{Persian Support and Internationalization}
+If you would like to make the Liferay 7 theme RTL and use Persian in the UI, follow these steps:
+\begin{enumerate}
+    \item Goto Control Panel
+    \item Goto Configuration
+    \item Goto Instance Settings
+    \item Goto Miscellaneous tab
+    \item Set default language as Persian
+    \item Click on save
+\end{enumerate}
+
+\subsection{I18n}
+For internationalizing your portlet based on the selected language of a user (or default language, do the following.
+
+In \textit{resources/content} create a file with the name of \textit{\textbf{Language\textunderscore fr.properties}}. The \textit{fr} keyword here means that this language would be for the users who choose French\textit{(fr\textunderscore FR)} as their language.
+
+List of supported languages are as follows:
+
+\lstset{language=bash}
+\begin{lstlisting}[caption=Supported Languages]
+locales=ar_SA,eu_ES,bg_BG,ca_AD,ca_ES,zh_CN,zh_TW,hr_HR,cs_CZ,da_DK,nl_NL,
+    nl_BE,en_US,en_GB,en_AU,et_EE,fi_FI,fr_FR,fr_CA,gl_ES,de_DE,el_GR,
+    iw_IL,hi_IN,hu_HU,in_ID,it_IT,ja_JP,ko_KR,lo_LA,lt_LT,nb_NO,fa_IR,
+    pl_PL,pt_BR,pt_PT,ro_RO,ru_RU,sr_RS,sr_RS_latin,sl_SI,sk_SK,es_ES,
+    sv_SE,tr_TR,uk_UA,vi_VN
+\end{lstlisting}
+
+The file with no suffix, means that it will be loaded when the selected language is not in the list of provided languages. (In most cases, it is in English)
+
+A sample for internationalization would be like this:
+
+\lstset{language=jsp}
+\begin{lstlisting}[caption=Language.properties]
+javax.portlet.display-name.awesome-portlet=awesome-portlet JSP
+javax.portlet.keywords.awesome-portlet=awesome-portlet,jsp
+javax.portlet.short-title.awesome-portlet=awesome-portlet JSP
+javax.portlet.title.awesome-portlet=awesome-portlet JSP Portlet
+awesome-portlet.caption=Hello from awesome-portlet JSP!
+\end{lstlisting}
+
+\lstset{language=jsp}
+\begin{lstlisting}[caption=Language\_fr.properties]
+javax.portlet.display-name.awesome-portlet=impressionnant portlet prénom
+javax.portlet.short-title.awesome-portlet=impressionnant portlet titre court
+javax.portlet.keywords.awesome-portlet=impressionnant portlet
+javax.portlet.title.awesome-portlet=impressionnant portlet titre
+awesome-portlet.caption=bonjour le monde impressionnant portlet
+\end{lstlisting}
+
+For adding one of these keys into your JSP files, use the \textit{message} element of \textit{liferay-ui} taglib.
+
+\lstset{language=jsp}
+\begin{lstlisting}[caption=view.jsp]
+<p>
+	<b><liferay-ui:message key="awesome-portlet.caption"/></b>
+</p>
+\end{lstlisting}
+
+This will automatically use the key defined for the specific language which the user has chosen.
