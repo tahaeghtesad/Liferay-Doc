@@ -57,3 +57,17 @@ For adding one of these keys into your JSP files, use the \textit{message} eleme
 \end{lstlisting}
 
 This will automatically use the key defined for the specific language which the user has chosen.
+
+\subsubsection{I18n in REST}
+
+For using internationalization in REST applications in Liferay, add the same bundles mentioned above, then use \textit{HTTPServletRequest}'s \textit{getLocale()} method to resolve the required key:
+
+
+\lstset{language=java}
+\begin{lstlisting}[caption=RestApplication.java]
+@GET
+@Path("/customMessage")
+public String customMessage(@Context HttpServletRequest request){
+	return ResourceBundle.getBundle("content.Language", request.getLocale()).getString("my-key");
+}
+\end{lstlisting}

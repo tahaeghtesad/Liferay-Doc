@@ -115,3 +115,20 @@ If you want to inject this module, use the \textit{@Reference} annotation of OSG
     }
 \end{lstlisting}
 \end{minipage}
+
+
+\subsection{CounterService vs Database's Auto Increment Identity}
+
+It's pros and cons are not clear, but Liferay has it's own ID creation procedure --- It can be used for other counter like behaviours. Liferay has a table \textit{\textbf{Counter}} who stores last number for a class type to synchronize the counter in clustered environments. It has been probably created to decrease dependency to database.
+
+A row for this table looks like this:
+
+\begin{center}
+    \begin{tabular}{|c|c|}
+        \hline
+        name & currentId \\
+        \hline \hline
+        com.liferay.portal.kernel.model.Layout\#20133\#true & 1 \\
+        \hline
+    \end{tabular}
+\end{center}
